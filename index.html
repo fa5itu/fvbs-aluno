@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FVBS — Laboratório do Aluno</title>
+    <style>
+      :root { color-scheme: dark; font: 16px/1.5 system-ui, sans-serif; background: #101820; color: #e7edf3; }
+      body { max-width: 960px; margin: auto; padding: 1.5rem; }
+      h1, h2 { color: #9ed6f5; }
+      section { margin: 1rem 0; padding: 1rem; border: 1px solid #405365; border-radius: .5rem; }
+      label { display: block; margin: .75rem 0 .25rem; color: #c5d1dc; }
+      input, select { width: 100%; box-sizing: border-box; padding: .6rem; background: #17232d; color: inherit; border: 1px solid #60788d; border-radius: .25rem; }
+      button { margin: .35rem .35rem .35rem 0; padding: .6rem .8rem; border: 1px solid #60788d; border-radius: .25rem; background: #1d3443; color: #e7edf3; cursor: pointer; }
+      button:hover { border-color: #9ed6f5; }
+      pre { overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: .8rem; background: #0a1015; border-radius: .25rem; }
+      .warning { color: #ffd38a; }
+      .state { font-weight: 700; color: #9ed6f5; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>FVBS Mini-Core — Laboratório do Aluno</h1>
+      <p>A IA pode propor. O FVBS valida. A aplicação executa. O registro comprova.</p>
+      <p class="warning">Protótipo didático com dados fictícios. Não movimenta dinheiro nem é pronto para produção.</p>
+    </header>
+
+    <section>
+      <h2>1 · Proponente tipado</h2>
+      <label for="utterance">Intenção de demonstração</label>
+      <input id="utterance" value="Quero usar meu cashback">
+      <label for="customer">Cliente fictício</label>
+      <select id="customer">
+        <option>CLI_001</option>
+        <option>CLI_002</option>
+        <option>CLI_UNKNOWN</option>
+      </select>
+      <label for="amount">Valor fictício</label>
+      <input id="amount" type="number" min="0.01" step="0.01" value="5">
+      <button id="propose">Propor</button>
+      <pre id="proposal-output">—</pre>
+      <h3>Command proposto</h3>
+      <pre id="command">—</pre>
+    </section>
+
+    <section>
+      <h2>2 · Ciclo da operação</h2>
+      <p>Estado atual: <span class="state" id="state">—</span></p>
+      <button id="receive">Receber e validar</button>
+      <button id="authorize">Autorizar</button>
+      <button id="execute">Executar efeito simulado</button>
+      <button id="register">Registrar</button>
+      <button id="skip">Tentar pular AUTORIZADO</button>
+      <pre id="output">Carregando políticas didáticas…</pre>
+    </section>
+
+    <section>
+      <h2>3 · Ledger e verificação</h2>
+      <button id="verify">Verificar cadeia</button>
+      <button id="export">Exportar JSON</button>
+      <button id="reset">Reiniciar demonstração</button>
+      <pre id="ledger">—</pre>
+    </section>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

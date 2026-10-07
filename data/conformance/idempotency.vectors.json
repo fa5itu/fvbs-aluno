@@ -1,0 +1,247 @@
+{
+  "contract": "CONTRACT-FVBS-CO-01",
+  "contract_version": "0.1.0",
+  "spec_basis": "RFC-FVBS-01 v0.3",
+  "subject": "idempotency",
+  "changelog": [
+    {
+      "version": "0.1.0",
+      "date": "2026-10-03",
+      "note": "Conjunto inicial: 8 normativos obrigatórios, 2 normativos complementares, 5 caracterizações (incluindo 1 lacuna normativa: SYS-IDEM-08)."
+    }
+  ],
+  "vectors": [
+    {
+      "id": "SYS-IDEM-01",
+      "title": "Primeira ocorrência processa normalmente",
+      "level": "system",
+      "class": "normative",
+      "approval": "mandatory",
+      "basis": "RFC-FVBS-01 v0.3 §6 regra 1",
+      "steps": [
+        { "op": "flow_complete", "key": "K1", "amount": 5 }
+      ],
+      "expect": {
+        "effects_count": 1,
+        "ledger_includes": ["OPERATION_REGISTERED"]
+      }
+    },
+    {
+      "id": "SYS-IDEM-02",
+      "title": "Retry com mesma chave não gera segundo efeito",
+      "level": "system",
+      "class": "normative",
+      "approval": "mandatory",
+      "basis": "RFC-FVBS-01 v0.3 §6 regra 2 + §9 I3",
+      "steps": [
+        { "op": "flow_complete", "key": "K1", "amount": 5 },
+        { "op": "receive_retry_same", "key": "K1", "amount": 5 }
+      ],
+      "expect": {
+        "effects_count": 1,
+        "last_response_kind": "duplicate",
+        "last_response_original_operation_id_is_first": true
+      }
+    },
+    {
+      "id": "SYS-IDEM-03",
+      "title": "Chave com payload divergente não produz efeito novo",
+      "level": "system",
+      "class": "normative",
+      "approval": "mandatory",
+      "basis": "RFC-FVBS-01 v0.3 §9 I3",
+      "steps": [
+        { "op": "flow_complete", "key": "K1", "amount": 5 },
+        { "op": "receive_retry_conflict", "key": "K1", "amount": 10 }
+      ],
+      "expect": {
+        "effects_count": 1,
+        "last_response_kind": "not_processed",
+        "ledger_length_unchanged_after_last": true
+      }
+    },
+    {
+      "id": "SYS-IDEM-04",
+      "title": "Duplicata retorna o resultado original",
+      "level": "system",
+      "class": "normative",
+      "approval": "complementary",
+      "basis": "RFC-FVBS-01 v0.3 §6 regra 2",
+      "steps": [
+        { "op": "flow_complete", "key": "K1", "amount": 5 },
+        { "op": "receive_retry_same", "key": "K1", "amount": 5 }
+      ],
+      "expect": {
+        "last_response_kind": "duplicate",
+        "last_response_original_result_kind": "REGISTERED"
+      }
+    },
+    {
+      "id": "SYS-IDEM-05",
+      "title": "Chave nova com payload idêntico processa como operação nova",
+      "level": "system",
+      "class": "normative",
+      "approval": "mandatory",
+      "basis": "RFC-FVBS-01 v0.3 §6 regra 1 (cada chave nova é uma ocorrência primeira) + §2 (idempotência não deduplica intenções distintas)",
+      "steps": [
+        { "op": "flow_complete", "key": "K1", "amount": 5 },
+        { "op": "flow_complete", "key": "K2", "amount": 5 }
+      ],
+      "expect": {
+        "effects_count": 2,
+        "last_response_kind": "processed"
+      }
+    },
+    {
+      "id": "SYS-IDEM-06",
+      "title": "Duplicata registrada no ledger como DUPLICATE_BLOCKED",
+      "level": "system",
+      "class": "characterization",
+      "approval": null,
+      "basis": "Comportamento observado em fvbs.js; evento não definido na RFC",
+      "steps": [
+        { "op": "flow_complete", "key": "K1", "amount": 5 },
+        { "op": "receive_retry_same", "key": "K1", "amount": 5 }
+      ],
+      "expect": {
+        "ledger_includes": ["DUPLICATE_BLOCKED"]
+      }
+    },
+    {
+      "id": "SYS-IDEM-07",
+      "title": "Conflito não registra evento no ledger",
+      "level": "system",
+      "class": "characterization",
+      "approval": null,
+      "basis": "Comportamento observado; discutível para auditoria — ver contrato §5 item 5",
+      "steps": [
+        { "op": "flow_complete", "key": "K1", "amount": 5 },
+        { "op": "receive_retry_conflict", "key": "K1", "amount": 10 }
+      ],
+      "expect": {
+        "ledger_length_unchanged_after_last": true
+      }
+    },
+    {
+      "id": "SYS-IDEM-08",
+      "title": "Retry sobre operação IN_PROGRESS (lacuna normativa)",
+      "level": "system",
+      "class": "characterization",
+      "approval": null,
+      "basis": "RFC silente sobre ciclo IN_PROGRESS; comportamento observado: DUPLICATE com original_result nulo — ver contrato §5 item 3",
+      "steps": [
+        { "op": "receive_in_progress_then_retry", "key": "K1", "amount": 5 }
+      ],
+      "expect": {
+        "last_response_kind": "duplicate",
+        "last_response_original_result_null": true
+      }
+    },
+    {
+      "id": "ST-IDEM-01",
+      "title": "begin em chave nova devolve NEW",
+      "level": "store",
+      "class": "normative",
+      "approval": "mandatory",
+      "basis": "RFC-FVBS-01 v0.3 §6 regra 1",
+      "steps": [
+        { "op": "begin", "key": "K1", "fingerprint": "fpA", "operation_id": "op1" }
+      ],
+      "expect": {
+        "last_begin_kind": "NEW"
+      }
+    },
+    {
+      "id": "ST-IDEM-02",
+      "title": "begin repetido com mesmo fingerprint devolve duplicata da operação original",
+      "level": "store",
+      "class": "normative",
+      "approval": "mandatory",
+      "basis": "RFC-FVBS-01 v0.3 §6 regra 2",
+      "steps": [
+        { "op": "begin", "key": "K1", "fingerprint": "fpA", "operation_id": "op1" },
+        { "op": "begin", "key": "K1", "fingerprint": "fpA", "operation_id": "op2" }
+      ],
+      "expect": {
+        "last_begin_kind": "DUPLICATE",
+        "last_begin_operation_id_is": "op1"
+      }
+    },
+    {
+      "id": "ST-IDEM-03",
+      "title": "begin com mesma chave e fingerprint divergente não é NEW",
+      "level": "store",
+      "class": "normative",
+      "approval": "mandatory",
+      "basis": "RFC-FVBS-01 v0.3 §6 regra 2 + §9 I3; forma CONFLICT é caracterização da referência",
+      "steps": [
+        { "op": "begin", "key": "K1", "fingerprint": "fpA", "operation_id": "op1" },
+        { "op": "begin", "key": "K1", "fingerprint": "fpB", "operation_id": "op2" }
+      ],
+      "expect": {
+        "last_begin_kind_not": "NEW",
+        "last_begin_kind": "CONFLICT"
+      }
+    },
+    {
+      "id": "ST-IDEM-04",
+      "title": "complete associa resultado; consulta posterior o retorna",
+      "level": "store",
+      "class": "normative",
+      "approval": "complementary",
+      "basis": "RFC-FVBS-01 v0.3 §6 regra 2",
+      "steps": [
+        { "op": "begin", "key": "K1", "fingerprint": "fpA", "operation_id": "op1" },
+        { "op": "complete", "key": "K1", "result": { "result": "REGISTERED" } },
+        { "op": "begin", "key": "K1", "fingerprint": "fpA", "operation_id": "op2" }
+      ],
+      "expect": {
+        "last_begin_kind": "DUPLICATE",
+        "last_begin_original_result_kind": "REGISTERED"
+      }
+    },
+    {
+      "id": "ST-IDEM-05",
+      "title": "Fingerprint é estável no conteúdo lógico e exclui campos voláteis",
+      "level": "store",
+      "class": "characterization",
+      "approval": null,
+      "basis": "Comportamento observado em idempotency.js; fingerprint não definido na RFC — ver contrato §5 item 4",
+      "steps": [
+        { "op": "fingerprint_stability" }
+      ],
+      "expect": {
+        "fingerprint_stability": true
+      }
+    },
+    {
+      "id": "ST-IDEM-06",
+      "title": "complete em chave não registrada falha explicitamente",
+      "level": "store",
+      "class": "characterization",
+      "approval": null,
+      "basis": "Comportamento observado (E_IDEMPOTENCY_STATE)",
+      "steps": [
+        { "op": "complete_unknown", "key": "KX" }
+      ],
+      "expect": {
+        "complete_throws": "E_IDEMPOTENCY_STATE"
+      }
+    },
+    {
+      "id": "EMI-IDEM-01",
+      "title": "Emissor gera idempotency_key quando ausente e preserva quando fornecida",
+      "level": "emitter",
+      "class": "normative",
+      "approval": "mandatory",
+      "basis": "RFC-FVBS-01 v0.3 §3 regra 4",
+      "steps": [
+        { "op": "create_command_key_handling" }
+      ],
+      "expect": {
+        "generated": true,
+        "preserved": true
+      }
+    }
+  ]
+}

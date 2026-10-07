@@ -1,0 +1,12 @@
+{
+  "command_catalog": ["PEDIDO", "CASHBACK", "DISCOUNT"],
+  "identity_whitelist": ["CLI_001", "CLI_002"],
+  "discounts_allowed": false,
+  "campaign_active": true,
+  "cashback_limit": 20,
+  "balances": {
+    "CLI_001": 150,
+    "CLI_002": 8
+  },
+  "proposer_min_confidence": 0.45
+}

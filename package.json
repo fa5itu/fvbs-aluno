@@ -1,0 +1,8 @@
+{
+  "name": "fvbs-aluno-laboratorio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
